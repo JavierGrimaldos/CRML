@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CRML -- Consensuador de Respuestas de Modelos de Lenguaje</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .section {
+            background: white;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            color: #555;
+            margin-top: 0;
+        }
+        
+        .models-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background: #f9f9f9;
+        }
+        
+        .model-checkbox {
+            padding: 8px 12px;
+            background: #e9ecef;
+            border: 2px solid #adb5bd;
+            border-radius: 5px;
+            cursor: pointer;
+            min-width: 180px;
+        }
+        
+        .model-checkbox.selected {
+            background: #cce5ff;
+            border-color: #007bff;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        
+        #run-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        #run-btn:hover {
+            background: #218838;
+        }
+        
+        #run-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            padding: 10px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .error-status {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        .success-status {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .result-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .model-response {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 12px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+        }
+        
+        .fusion-box {
+            background: #e7f3ff;
+            border: 2px solid #007bff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        button {
+            padding: 8px 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #f8f9fa;
+        }
+        
+        button:hover {
+            background: #e9ecef;
+        }
+        
+        .selected-count {
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .consenso-bar {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+        
+        .bar-label {
+            width: 200px;
+            font-weight: bold;
+        }
+        
+        .bar-container {
+            flex: 1;
+            background: #e9ecef;
+            height: 25px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .bar-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+        
+        .bar-value {
+            margin-left: 10px;
+            font-weight: bold;
+            min-width: 50px;
+            text-align: right;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #dee2e6;
+        }
+        
+        .no-data i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #adb5bd;
+        }
+        
+        .data-section {
+            margin-bottom: 30px;
+        }
+        
+        .top-1-badge {
+            background: #ffc107;
+            color: #212529;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 8px;
+            font-weight: bold;
+        }
+        
+        .top-3-badge {
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 8px;
+            font-weight: bold;
+        }
+        
+        .consenso-badge {
+            margin-left: 10px;
+            padding: 2px 8px;
+            color: white;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .top1-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #ffc107;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .top3-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #28a745;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .other-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #6f42c1;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .model-ranking {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .corona-icon {
+            color: #ffc107;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h1>CRML -- Consensuador de Respuestas de Modelos de Lenguaje</h1>
+        <p>Selecciona modelos, escribe un prompt y ejecuta el análisis.</p>
+        <p>No incluya información personal.</p>
+    </div>
+    
+    <div class="section">
+        <h2>1. Tipo de Modelos</h2>
+        <div class="buttons">
+            <button onclick="loadModels('free')">Modelos Gratuitos</button>
+            <button onclick="loadModels('pay')">Modelos de Pago</button>
+            <button onclick="selectAll()">Seleccionar Todos</button>
+            <button onclick="deselectAll()">Deseleccionar Todos</button>
+        </div>
+        
+        <h2>2. Selecciona Modelos (<span id="selected-count" class="selected-count">0</span> seleccionados)</h2>
+        <div class="models-container" id="models-container">
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>3. Escribe tu Prompt</h2>
+        <textarea id="prompt-input" placeholder="Escribe aquí tu pregunta o caso clínico..."></textarea>
+        <div style="text-align: right; display: none;">
+            <span id="char-count">0</span> caracteres
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>4. Ejecutar Análisis</h2>
+        <button id="run-btn" onclick="runAnalysis()" disabled>EJECUTAR ANÁLISIS COMPLETO</button>
+        <div id="status" class="status" style="display: none;"></div>
+    </div>
+    
+    <div id="results-section" class="section" style="display: none;">
+        <h2>RESULTADOS DEL ANÁLISIS</h2>
+        
+        <div id="consenso-result">
+            <h3>GRÁFICO DE CONSENSOS INDIVIDUALES</h3>
+            <div id="bars-container">
+            </div>
+            
+            <div id="no-consenso-data" class="no-data" style="display: none;">
+                <h3>No hay datos de consenso disponibles</h3>
+                <p>Los datos de consenso no se calcularon o hubo un error en el análisis.</p>
+            </div>
+        </div>
+        
+        <div id="fusion-result" class="data-section">
+            <h3>RESPUESTA FUSIONADA</h3>
+            <div id="fusion-container">
+            </div>
+        </div>
+        
+        <div id="report-result" class="data-section">
+            <h3>REPORTE</h3>
+            <div id="report-container">
+            </div>
+        </div>
+        
+        <div id="responses-result" class="data-section">
+            <h3>RESPUESTAS INDIVIDUALES</h3>
+            <div id="responses-container">
+            </div>
+        </div>
+    </div>
+    
+    <div class="section" style="text-align: center; font-size: 12px; color: #666;">
+        <p>Servidor: http://localhost:8282 | 
+           <a href="/api/health" target="_blank">Estado</a> | 
+           <a href="/api/models" target="_blank">Ver modelos JSON</a>
+        </p>
+    </div>
+
+    <script>
+        let selectedModels = new Set();
+        let currentType = "free";
+        let allModels = { free: [], pay: [] };
+        
+        document.addEventListener("DOMContentLoaded", async function() {
+            await loadModelsFromServer();
+            setupEventListeners();
+        });
+        
+        async function loadModelsFromServer() {
+            try {
+                const response = await fetch("/api/models");
+                const data = await response.json();
+                
+                if (data.success) {
+                    allModels.free = data.free_models || [];
+                    allModels.pay = data.pay_models || [];
+                    loadModels("free");
+                }
+            } catch (error) {
+                showError("No se pudieron cargar los modelos del servidor");
+            }
+        }
+        
+        function loadModels(type) {
+            currentType = type;
+            const container = document.getElementById("models-container");
+            const models = allModels[type];
+            
+            if (!models || models.length === 0) {
+                container.innerHTML = "<p>No hay modelos disponibles</p>";
+                return;
+            }
+            
+            let html = "";
+            models.forEach(model => {
+                const isSelected = selectedModels.has(model.name);
+                const shortName = getShortName(model.name);
+                
+                html += `
+                    <div class="model-checkbox ${isSelected ? "selected" : ""}" 
+                         onclick="toggleModel('${model.name}')">
+                        <input type="checkbox" ${isSelected ? "checked" : ""} 
+                               onchange="toggleModel('${model.name}')">
+                        <strong>${shortName}</strong><br>
+                        <small>${model.origin} - ${model.size}</small>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            updateSelectedCount();
+            updateRunButton();
+        }
+        
+        function toggleModel(modelName) {
+            if (selectedModels.has(modelName)) {
+                selectedModels.delete(modelName);
+            } else {
+                selectedModels.add(modelName);
+            }
+            loadModels(currentType);
+        }
+        
+        function selectAll() {
+            allModels[currentType].forEach(model => {
+                selectedModels.add(model.name);
+            });
+            loadModels(currentType);
+        }
+        
+        function deselectAll() {
+            allModels[currentType].forEach(model => {
+                selectedModels.delete(model.name);
+            });
+            loadModels(currentType);
+        }
+        
+        function updateSelectedCount() {
+            document.getElementById("selected-count").textContent = selectedModels.size;
+        }
+        
+        function updateRunButton() {
+            const prompt = document.getElementById("prompt-input").value.trim();
+            const btn = document.getElementById("run-btn");
+            btn.disabled = !(selectedModels.size > 0 && prompt.length > 0);
+        }
+        
+        function setupEventListeners() {
+            document.getElementById("prompt-input").addEventListener("input", function() {
+                document.getElementById("char-count").textContent = this.value.length;
+                updateRunButton();
+            });
+        }
+        
+        function getShortName(fullName) {
+            const parts = fullName.split("/");
+            if (parts.length > 1) {
+                const name = parts[1].split(":")[0];
+                return name.length > 15 ? name.substring(0, 12) + "..." : name;
+            }
+            return fullName.length > 15 ? fullName.substring(0, 12) + "..." : fullName;
+        }
+        
+        function showError(message) {
+            const status = document.getElementById("status");
+            status.textContent = `${message}`;
+            status.className = "status error-status";
+            status.style.display = "block";
+            
+            setTimeout(() => {
+                status.style.display = "none";
+            }, 5000);
+        }
+        
+        function showSuccess(message) {
+            const status = document.getElementById("status");
+            status.textContent = `${message}`;
+            status.className = "status success-status";
+            status.style.display = "block";
+            
+            setTimeout(() => {
+                status.style.display = "none";
+            }, 3000);
+        }
+
+        async function runAnalysis() {
+            const prompt = document.getElementById("prompt-input").value.trim();
+            const models = Array.from(selectedModels);
+            
+            if (!prompt) {
+                showError("Escribe un prompt primero.");
+                return;
+            }
+            
+            if (models.length === 0) {
+                showError("Selecciona al menos un modelo.");
+                return;
+            }
+            
+            const runBtn = document.getElementById("run-btn");
+            const status = document.getElementById("status");
+            const resultsSection = document.getElementById("results-section");
+            
+            runBtn.disabled = true;
+            runBtn.textContent = "EJECUTANDO...";
+            status.textContent = "Consultando modelos y analizando consenso...";
+            status.className = "status";
+            status.style.display = "block";
+            resultsSection.style.display = "block";
+            clearResults();
+            
+            try {
+                const response = await fetch("/api/run-ensemble", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        models: models,
+                        modelType: currentType
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || "Error en el análisis");
+                }
+                displayResults(data);
+                showSuccess("Análisis completado");
+                
+            } catch (error) {
+                showError(`ERROR: ${error.message}`);
+                displayNoData();
+            } finally {
+                runBtn.disabled = false;
+                runBtn.textContent = "EJECUTAR ANÁLISIS COMPLETO";
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById("bars-container").innerHTML = "";
+            document.getElementById("fusion-container").innerHTML = "";
+            document.getElementById("report-container").innerHTML = "";
+            document.getElementById("responses-container").innerHTML = "";
+            document.getElementById("no-consenso-data").style.display = "none";
+        }
+        
+        function displayNoData() {
+            document.getElementById("bars-container").innerHTML = "";
+            document.getElementById("no-consenso-data").style.display = "block";
+            
+            document.getElementById("fusion-container").innerHTML = 
+                '<div class="no-data"><h3>No hay respuesta fusionada</h3><p>No se pudo generar una respuesta fusionada.</p></div>';
+            
+            document.getElementById("report-container").innerHTML = 
+                '<div class="no-data"><h3>No hay reporte disponible</h3><p>No se pudo generar el reporte de análisis.</p></div>';
+            
+            document.getElementById("responses-container").innerHTML = 
+                '<div class="no-data"><h3>No hay respuestas individuales</h3><p>No se recibieron respuestas de los modelos.</p></div>';
+        }
+        
+        function displayResults(data) {
+            displayConsensoBars(data);
+            displayFusion(data);
+            displayReport(data);
+            displayResponses(data);
+        }
+        
+        function displayConsensoBars(data) {
+            const barsContainer = document.getElementById("bars-container");
+            const noDataContainer = document.getElementById("no-consenso-data");
+            const consensoData = data.consenso_data || data.report;
+            
+            if (!consensoData || !consensoData.consensos_individuales) {
+                barsContainer.innerHTML = "";
+                noDataContainer.style.display = "block";
+                return;
+            }
+            noDataContainer.style.display = "none";
+            const modeloMasConsensuado = consensoData.modelo_mas_consensuado || null;
+            const top3Modelos = consensoData.top_3_modelos || [];
+            
+            let labels = [];
+            let consensos = [];
+            
+            if (consensoData.consensos_individuales && consensoData.consensos_individuales.length > 0) {
+                consensoData.consensos_individuales.forEach(item => {
+                    labels.push(getShortName(item.modelo));
+                    consensos.push(item.consenso_individual || 0);
+                });
+            }
+            
+            if (labels.length === 0) {
+                barsContainer.innerHTML = "";
+                noDataContainer.style.display = "block";
+                return;
+            }
+            
+            let html = "";
+            if (consensoData.consenso_global !== undefined && consensoData.consenso_global !== null) {
+                const globalWidth = consensoData.consenso_global * 100;
+                
+                html += `
+                    <div class="consenso-bar">
+                        <div class="bar-label" style="font-weight: bold; color: #007bff;">CONSENSO GLOBAL</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: ${globalWidth}%; background: #007bff;"></div>
+                        </div>
+                        <div class="bar-value" style="color: #007bff;">${consensoData.consenso_global.toFixed(3)}</div>
+                    </div>
+                    <hr style="margin: 20px 0; border-color: #dee2e6;">
+                    <p style="margin-bottom: 15px; font-weight: bold;">Consenso por modelo:</p>
+                    <div style="font-size: 12px; color: #666; margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                        <div><span class="top1-indicator"></span> Modelo más consensuado</div>
+                        <div><span class="other-indicator"></span> Resto de modelos</div>
+                    </div>
+                `;
+            }
+            
+            labels.forEach((label, index) => {
+                const consenso = consensos[index];
+                const width = consenso > 0 ? consenso * 100 : 0;
+                const modelFullName = consensoData.consensos_individuales[index].modelo;
+                const isTop1 = modeloMasConsensuado === modelFullName;
+                const isTop3 = top3Modelos.includes(modelFullName) && !isTop1;
+                
+                let color = "#6f42c1";
+                let badge = "";
+                
+                if (isTop1) {
+                    color = "#ffc107";
+                    badge = "<span class='top-1-badge'>MÁS CONSENSUADO</span>";
+                } else if (isTop3) {
+                    color = "#28a745";
+                    badge = "<span class='top-3-badge'>TOP 3</span>";
+                }
+                
+                html += `
+                    <div class="consenso-bar">
+                        <div class="bar-label">
+                            <div class="model-ranking">
+                                ${label} ${badge}
+                            </div>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: ${width}%; background: ${color};"></div>
+                        </div>
+                        <div class="bar-value">${consenso.toFixed(3)}</div>
+                    </div>
+                `;
+            });
+            
+            barsContainer.innerHTML = html;
+        }
+        
+        function displayFusion(data) {
+            const fusionContainer = document.getElementById("fusion-container");
+            
+            const hasFusion = data.report?.respuesta_fusionada || 
+                             data.consenso_data?.respuesta_fusionada;
+            
+            if (hasFusion) {
+                const fusion = data.report?.respuesta_fusionada || 
+                              data.consenso_data?.respuesta_fusionada;
+                const modelosBase = data.report?.modelos_base || 
+                                   data.consenso_data?.modelos_base || [];
+                
+                let modelosHtml = "";
+                if (modelosBase.length > 0) {
+                    const modeloMasConsensuado = data.consenso_data?.modelo_mas_consensuado;
+                    if (modeloMasConsensuado && modelosBase.includes(modeloMasConsensuado)) {
+                        modelosHtml = `<p><strong>Modelos base (incluye el más consensuado: ${getShortName(modeloMasConsensuado)}):</strong> ${modelosBase.map(m => getShortName(m)).join(", ")}</p>`;
+                    } else {
+                        modelosHtml = `<p><strong>Modelos base (Top 3 consensuados):</strong> ${modelosBase.map(m => getShortName(m)).join(", ")}</p>`;
+                    }
+                }
+                
+                fusionContainer.innerHTML = `
+                    <div class="fusion-box">
+                        <p><strong>Prompt analizado:</strong> ${data.prompt?.substring(0, 150)}${data.prompt?.length > 150 ? "..." : ""}</p>
+                        ${modelosHtml}
+                        <div style="background: white; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                            <strong>RESPUESTA FUSIONADA:</strong><br><br>
+                            <div style="white-space: pre-wrap; line-height: 1.5;">${fusion}</div>
+                        </div>
+                    </div>
+                `;
+            } 
+            else if (data.report?.respuesta_mas_consensuada || data.consenso_data?.respuesta_mas_consensuada) {
+                const best = data.report?.respuesta_mas_consensuada || 
+                            data.consenso_data?.respuesta_mas_consensuada;
+                
+                let bestResponse = "";
+                if (data.results) {
+                    const result = data.results.find(r => r.model_name === best.modelo);
+                    if (result) {
+                        bestResponse = result.response;
+                    }
+                }
+                
+                fusionContainer.innerHTML = `
+                    <div class="fusion-box">
+                        <p><strong>Prompt analizado:</strong> ${data.prompt?.substring(0, 150)}${data.prompt?.length > 150 ? "..." : ""}</p>
+                        <p><strong>Respuesta más consensuada:</strong> ${getShortName(best.modelo)} (Consenso: ${(best.consenso_individual || 0).toFixed(3)})</p>
+                        <div style="background: white; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                            <strong>RESPUESTA RECOMENDADA:</strong><br><br>
+                            <div style="white-space: pre-wrap; line-height: 1.5;">${bestResponse || "Respuesta no disponible"}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            else {
+                fusionContainer.innerHTML = `
+                    <div class="no-data">
+                        <h3>No hay respuesta fusionada disponible</h3>
+                        <p>No se pudo generar una respuesta fusionada.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function displayReport(data) {
+            const reportContainer = document.getElementById("report-container");
+            
+            const consensoData = data.consenso_data || data.report;
+            const hasResults = data.results && data.results.length > 0;
+            const hasConsenso = consensoData && consensoData.consenso_global !== undefined;
+            
+            if (!hasResults && !hasConsenso) {
+                reportContainer.innerHTML = `
+                    <div class="no-data">
+                        <h3>No hay datos para reporte</h3>
+                        <p>No se recibieron datos suficientes para generar un reporte.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = "<div class='result-box'>";
+            
+            if (hasConsenso) {
+                const consensoGlobal = consensoData.consenso_global || 0;
+                const consensoGlobalPercent = (consensoGlobal * 100).toFixed(1);
+                
+                html += `
+                    <p><strong>ESTADÍSTICAS:</strong></p>
+                    <div style="margin: 15px 0;">
+                        <p><strong>Consenso Global:</strong> ${consensoGlobal.toFixed(3)}</p>
+                        <div style="background: #e9ecef; height: 20px; border-radius: 10px; overflow: hidden; margin: 5px 0;">
+                            <div style="width: ${consensoGlobalPercent}%; height: 100%; background: #007bff;"></div>
+                        </div>
+                        <p style="text-align: center; font-weight: bold; color: #007bff;">${consensoGlobalPercent}%</p>
+                    </div>
+                `;
+            }
+            
+            html += `<p>Modelos analizados: <strong>${data.results?.length || 0}</strong></p>`;
+            html += `<p>Prompt: "${data.prompt?.substring(0, 50)}${data.prompt?.length > 50 ? "..." : ""}"</p>`;
+            if (consensoData?.modelo_mas_consensuado) {
+                html += `<p><strong>Modelo más consensuado:</strong> ${getShortName(consensoData.modelo_mas_consensuado)}</p>`;
+            }
+            if (consensoData?.top_3_modelos && consensoData.top_3_modelos.length > 0) {
+                const otrosTop3 = consensoData.top_3_modelos.filter(m => m !== consensoData.modelo_mas_consensuado);
+                if (otrosTop3.length > 0) {
+                    html += `<p><strong>Otros modelos Top 3:</strong> ${otrosTop3.map(m => getShortName(m)).join(", ")}</p>`;
+                }
+            }
+            
+            if (consensoData?.respuesta_mas_consensuada) {
+                const best = consensoData.respuesta_mas_consensuada;
+                html += `<p>Consenso individual más alto: <strong>${(best.consenso_individual || 0).toFixed(3)}</strong></p>`;
+            }
+            
+            if (data.timestamp) {
+                const date = new Date(data.timestamp);
+                html += `<p>Análisis completado: <strong>${date.toLocaleTimeString()}</strong></p>`;
+            }
+            
+            html += "</div>";
+            reportContainer.innerHTML = html;
+        }
+        
+        function displayResponses(data) {
+            const responsesContainer = document.getElementById("responses-container");
+            
+            if (!data.results || data.results.length === 0) {
+                responsesContainer.innerHTML = `
+                    <div class="no-data">
+                        <h3>No hay respuestas individuales</h3>
+                        <p>No se recibieron respuestas de los modelos seleccionados.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const consensoData = data.consenso_data || data.report;
+            let resultsWithConsenso = [...data.results];
+            const modeloMasConsensuado = consensoData?.modelo_mas_consensuado || null;
+            const top3Modelos = consensoData?.top_3_modelos || [];
+            if (consensoData?.consensos_individuales && consensoData.consensos_individuales.length > 0) {
+                const consensoMap = {};
+                consensoData.consensos_individuales.forEach(c => {
+                    consensoMap[c.modelo] = c.consenso_individual;
+                });
+                
+                resultsWithConsenso.sort((a, b) => {
+                    const consensoA = consensoMap[a.model_name] || 0;
+                    const consensoB = consensoMap[b.model_name] || 0;
+                    return consensoB - consensoA;
+                });
+            }
+            
+            let html = "";
+            
+            resultsWithConsenso.forEach((result, index) => {
+                let consenso = 0;
+                if (consensoData?.consensos_individuales) {
+                    const consensoInfo = consensoData.consensos_individuales.find(c => c.modelo === result.model_name);
+                    consenso = consensoInfo ? consensoInfo.consenso_individual : 0;
+                }
+                const isTop1 = modeloMasConsensuado === result.model_name;
+                const isTop3 = top3Modelos.includes(result.model_name) && !isTop1;
+                
+                let borderColor = "#6f42c1";
+                let badgeColor = "#6f42c1";
+                let badge = "";
+                
+                if (isTop1) {
+                    borderColor = "#ffc107";
+                    badgeColor = "#ffc107";
+                    badge = "<span class='top-1-badge'>MÁS CONSENSUADO</span>";
+                } else if (isTop3) {
+                    borderColor = "#28a745";
+                    badgeColor = "#28a745";
+                    badge = "<span class='top-3-badge'>TOP 3</span>";
+                }
+                
+                const timestamp = result.timestamp ? new Date(result.timestamp).toLocaleTimeString() : "";
+                
+                html += `
+                    <div class="model-response" style="border-left-color: ${borderColor};">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <div>
+                                <strong>${index + 1}. ${getShortName(result.model_name)} ${badge}</strong>
+                                ${consenso > 0 ? `
+                                    <span class="consenso-badge" style="background: ${badgeColor};">
+                                        Consenso: ${consenso.toFixed(3)}
+                                    </span>
+                                ` : ""}
+                            </div>
+                            ${timestamp ? `<small>${timestamp}</small>` : ""}
+                        </div>
+                        <div style="white-space: pre-wrap; line-height: 1.5; max-height: 200px; overflow-y: auto; padding-right: 10px;">
+                            ${result.response || "Sin respuesta"}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            responsesContainer.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

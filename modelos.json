@@ -1,0 +1,15 @@
+{
+  "LLM": {
+    "FREE_MODELS": [
+      {"name": "liquid/lfm-2.5-1.2b-thinking:free", "origin": "France", "size": "1.2B"},
+      {"name": "google/gemma-3n-e2b-it:free", "origin": "USA", "size": "2B"},
+      {"name": "nvidia/nemotron-3-nano-30b-a3b:free","origin":"USA","size":"30B"},
+      {"name": "stepfun/step-3.5-flash:free","origin":"USA","size":"43B"},
+      {"name": "arcee-ai/trinity-large-preview:free","origin":"USA","size":"53B"}
+    ],
+    "PAY_MODELS": [
+        {"name": "prueba1", "origin": "France", "size": "7B"}
+    ]
+  },
+  "TRANSFORMERS": {}
+}
