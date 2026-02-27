@@ -5,9 +5,9 @@ from datetime import datetime
 from pathlib import Path
 
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
-API_KEY = "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"
+API_KEY = //COMPLETAR CON LA DE USURIO
 
-OUTPUT_PATH = "C:/Users/javie/Desktop/Universidad/Carrera/TFG/CRML/results_ensembler"
+OUTPUT_PATH = //AÑADIR PATH PARA GUARDAR LOS ARCHIVOS
 
 class Ensamblador:
     def __init__(self, modelos=None):
@@ -60,4 +60,5 @@ class Ensamblador:
         filename=f"ensamble_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json"
         filepath=Path(output_dir)/filename
         with open(filepath,"w",encoding="UTF-8") as file:
+
             json.dump(respuestas, file, indent=2, ensure_ascii=False)
