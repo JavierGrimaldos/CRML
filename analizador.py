@@ -8,7 +8,7 @@ from textblob import TextBlob
 import json
 import requests
 
-API_KEY="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"
+API_KEY=//COMPLETAR CON LA DE USUARIO
 MODELO="gpt-3.5-turbo"
 
 def obtener_matriz_consenso_completa(respuestas):
@@ -309,4 +309,5 @@ def dataAnalisis(resultados_ensamblador):
         return reporte
     except Exception as e:
         print(f"Error en el análisis: {e}")
+
         return {"Error":f"Error: {str(e)}"}
